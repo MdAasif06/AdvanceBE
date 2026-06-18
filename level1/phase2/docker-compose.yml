@@ -1,0 +1,14 @@
+services:
+  backend:
+  # if we have not docker file then use images
+    build: ./backend
+    env_file:
+      - ./backend/.env
+    ports:
+      - 8000:5000
+    
+  frontend:
+    build: ./frontend
+    ports:
+      - 5173:5173
+  
