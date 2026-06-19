@@ -4,6 +4,8 @@ import connectDB from "./config/db.js";
 import userModel from "./models/user.model.js";
 import Redis from "ioredis";
 import rateLimiter from "./middleware/rateLimited.js";
+import sendEmail from "./config/sendEmail.js";
+import emailQueue from "./queue.js";
 dotenv.config();
 
 const app = express();
@@ -24,7 +26,9 @@ app.post("/create", async (req, res) => {
     email,
     password,
   });
-
+ 
+  await emailQueue.add("send-email",{email})
+  // await sendEmail()
   return res.json(user);
 });
 ///without redis take time to data 75-163ms
