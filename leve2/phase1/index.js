@@ -3,13 +3,14 @@ import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import userModel from "./models/user.model.js";
 import Redis from "ioredis";
+import rateLimiter from "./middleware/rateLimited.js";
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
 app.use(express.json());
 
-const redis = new Redis(process.env.REDIS_URL);
+export const redis = new Redis(process.env.REDIS_URL);
 
 app.get("/", (req, res) => {
   return res.status(200).json({ messsage: "Hello from docker in redis" });
@@ -27,7 +28,7 @@ app.post("/create", async (req, res) => {
   return res.json(user);
 });
 ///without redis take time to data 75-163ms
-app.get("/get", async (req, res) => {
+app.get("/get",rateLimiter ,async (req, res) => {
   const user = await userModel.find({});
 
   return res.json(user);
