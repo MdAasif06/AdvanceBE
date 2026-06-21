@@ -17,7 +17,7 @@ console.log("REDIS_URL =", process.env.REDIS_URL);
 
 
 app.get("/", (req, res) => {
-  return res.status(200).json({ messsage: "Hello from docker in redis" });
+  return res.status(200).json({ messsage: `Hello from docker ${process.env.SERVER_NAME} ` });
 });
 
 app.post("/create", async (req, res) => {
