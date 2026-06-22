@@ -1,0 +1,47 @@
+services:
+  nginx:
+    image: nginx
+    ports:
+      - 8080:80
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+
+  gateway1:
+    build: ./backend/gateway
+    env_file:
+      - ./backend/gateway/.env
+    environment:
+      - SERVER_NAME=pahla gateway
+    ports:
+      - 8001:4000
+  
+  gateway2:
+    build: ./backend/gateway
+    env_file:
+      - ./backend/gateway/.env
+    environment:
+      - SERVER_NAME=dusra gateway
+    ports:
+      - 8002:4000
+
+  auth-service:
+    build: ./backend/services/authService
+    env_file:
+      - ./backend/services/authService/.env
+    ports:
+      - 5001:4001
+  
+  order-service:
+    build: ./backend/services/orderService
+    env_file:
+      - ./backend/services/orderService/.env
+    ports:
+      - 5002:4002
+  
+  product-service:
+    build: ./backend/services/productService
+    env_file:
+      - ./backend/services/productService/.env
+    ports:
+      - 5003:4003
+
