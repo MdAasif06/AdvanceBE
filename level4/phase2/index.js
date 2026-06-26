@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 dotenv.config();
-import {} from "@langchain/core";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatGroq } from "@langchain/groq";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { PDFParse } from "pdf-parse";
@@ -9,7 +9,6 @@ import fs from "fs";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { TaskType } from "@google/generative-ai";
 import { QdrantVectorStore } from "@langchain/qdrant";
-
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -29,7 +28,6 @@ const embeddings = new GoogleGenerativeAIEmbeddings({
   title: "Document title",
 });
 
-
 const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
   url: process.env.QDRANT_URL,
   collectionName: "grocery-store",
@@ -47,17 +45,30 @@ const upload = async () => {
   });
   const docs = await spiliter.createDocuments([text]);
   // console.log(docs);
-  await vectorStore.addDocuments(docs)
+  await vectorStore.addDocuments(docs);
 };
 upload();
 
-
 app.post("/ai", async (req, res) => {
   const { input } = req.body;
-  const response = await llm.invoke(input);
-  console.log(response);
 
-  return res.status(200).json({ ai: response.content });
+  const docOne = await vectorStore.similaritySearch(input, 5);
+  // console.log(docOne)
+  const context = docOne.map((d) => d.pageContent).join("/n");
+  const response = await llm.invoke([
+    new SystemMessage(`You are a RAG AI Asistent.
+        STRICT RULE:
+        - Answer only from context
+        - Do not use outside knowledge
+        - if answer not found say:
+        "I don't know from uploaded PDF".
+        Context:${context}`),
+        new HumanMessage(input)
+  ]);
+
+  // console.log(response);
+
+  return res.status(200).json({AI:response.content});
 });
 
 app.get("/", (req, res) => {
